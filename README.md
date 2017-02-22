@@ -1,0 +1,2 @@
+# BlueToothCenter
+测试与BlueToothPeripheral同用的蓝牙发送与接收
