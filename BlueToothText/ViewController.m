@@ -13,6 +13,8 @@
 @property (strong,nonatomic) MCSession *session;
 @property (strong,nonatomic) MCBrowserViewController *browserController;
 @property (strong,nonatomic) UIImagePickerController *imagePickerController;
+@property (weak, nonatomic) IBOutlet UITextField *sendText;
+@property (weak, nonatomic) IBOutlet UILabel *receiveLabel;
 
 @property (strong, nonatomic) UIImageView *photo;
 @end
@@ -27,10 +29,23 @@
     //创建会话
     _session=[[MCSession alloc]initWithPeer:peerID];
     _session.delegate=self;
-    _photo = [[UIImageView alloc]initWithFrame:self.view.frame];
+    
+    
+    
+    
+    _photo = [[UIImageView alloc]initWithFrame:CGRectMake(0, 280, self.view.frame.size.width, self.view.frame.size.height-280)];
     [self.view addSubview:_photo];
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"查找设备" style:UIBarButtonItemStylePlain target:self action:@selector(chooseDevice)];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"选择照片" style:UIBarButtonItemStylePlain target:self action:@selector(choosePicture)];
+}
+- (IBAction)send:(UIButton *)sender {
+    NSError *error=nil;
+   
+    [self.session sendData:[self.sendText.text dataUsingEncoding:NSUTF8StringEncoding] toPeers:[self.session connectedPeers] withMode:MCSessionSendDataUnreliable error:&error];
+    NSLog(@"开始发送数据...");
+    if (error) {
+        NSLog(@"发送数据过程中发生错误，错误信息：%@",error.localizedDescription);
+    }
 }
 #pragma mark- UI事件
 - (void)chooseDevice{
@@ -74,25 +89,22 @@
 //接收数据
 -(void)session:(MCSession *)session didReceiveData:(NSData *)data fromPeer:(MCPeerID *)peerID{
     NSLog(@"开始接收数据...");
-    UIImage *image=[UIImage imageWithData:data];
-    [self.photo setImage:image];
+    self.receiveLabel.text = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+
+//    UIImage *image=[UIImage imageWithData:data];
+//    [self.photo setImage:image];
     //保存到相册
-    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+//    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
 }
 #pragma mark - UIImagePickerController代理方法
 -(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info{
     UIImage *image=[info objectForKey:UIImagePickerControllerOriginalImage];
     [self.photo setImage:image];
     //发送数据给所有已连接设备
-    NSError *error=nil;
+//    NSError *error=nil;
 //    NSString *str = @"曹世鑫的测试";
 //    [str dataUsingEncoding:NSUTF8StringEncoding]
-    [self.session sendData:UIImagePNGRepresentation(image) toPeers:[self.session connectedPeers] withMode:MCSessionSendDataUnreliable error:&error];
-    NSLog(@"开始发送数据...");
-    if (error) {
-        NSLog(@"发送数据过程中发生错误，错误信息：%@",error.localizedDescription);
-    }
-    [self.imagePickerController dismissViewControllerAnimated:YES completion:nil];
+        [self.imagePickerController dismissViewControllerAnimated:YES completion:nil];
 }
 -(void)imagePickerControllerDidCancel:(UIImagePickerController *)picker{
     [self.imagePickerController dismissViewControllerAnimated:YES completion:nil];
